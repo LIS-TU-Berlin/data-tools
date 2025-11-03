@@ -1,4 +1,4 @@
-import lis_data as ld
+import data_tools as ld
 
 if __name__ == "__main__":
     D = ld.DataInstaller('shapenet/original-obj.yml')
