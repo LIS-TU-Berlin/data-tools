@@ -4,23 +4,31 @@ import yaml
 from pathlib import PurePath
 
 class DataInstaller:
-    data_src = '$USER@hal-9000.lis.tu-berlin.de:/home/data/'
-    data_dest = './'
+    data_home = '$USER@hal-9000.lis.tu-berlin.de:/home/data/'
 
-    def __init__(self, manifest_file):
-        self.data_src = os.path.expandvars(self.data_src)
+    def __init__(self, manifest_file, dest_path = './'):
+        self.data_home = os.path.expandvars(self.data_home)
+        self.data_dest = dest_path
         self.rsync = 'rsync -vrlptzP --update --mkpath'.split()
 
         # load the manifest
-        self.path = str(PurePath(manifest_file).parent)+'/'
-        print('== base path:', self.path)
-        cmd = self.rsync + [self.data_src+manifest_file, self.data_dest+self.path]
-        print('== loading manifest:', cmd)
+        self.data_src = str(PurePath(manifest_file).parent)+'/'
+        manifest_name = str(PurePath(manifest_file).name)
+        print('--- base path:', self.data_src)
+        cmd = self.rsync + [self.data_home+manifest_file, self.data_dest]
+        print('--- loading manifest:', cmd)
         subprocess.run(cmd)
 
-        with open(self.data_dest+manifest_file, 'r', encoding='utf-8') as fil:
+        with open(manifest_name, 'r', encoding='utf-8') as fil:
             self.manifest = yaml.safe_load(fil)
-    
+
+        # print('--- manifest:\n', self.manifest)
+
+    def install_all(self):
+        cmd = self.rsync + [self.data_home+self.data_src, self.data_dest] #'--dry-run', 
+        print('--- loading full folder:', cmd)
+        subprocess.run(cmd)
+
     def install(self, start=0, stop=-1):
         datasets = self.manifest['datasets']
 
@@ -32,6 +40,6 @@ class DataInstaller:
             fil.write('- *\n')
 
         # load them
-        cmd = self.rsync + ['--include-from=z.files', self.data_src+self.path, self.data_dest+self.path]
-        print('== loading data files:', cmd)
+        cmd = self.rsync + ['--include-from=z.files', self.data_home+self.data_src, self.data_dest]
+        print('--- loading datasets:', cmd)
         subprocess.run(cmd)

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import h5py
 import json
 import ast
@@ -40,4 +42,12 @@ class H5Reader:
         d = ast.literal_eval(str)
         return d
 
+if __name__ == "__main__":
+    filename = sys.argv[1]
+    print('=== file', filename)
+    try:
+        h5 = H5Reader(filename)
+        h5.print_info()
+    except KeyboardInterrupt:
+        sys.exit(1)
 
