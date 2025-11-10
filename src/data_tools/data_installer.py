@@ -6,33 +6,39 @@ from pathlib import PurePath
 class DataInstaller:
     data_home = '$USER@hal-9000.lis.tu-berlin.de:/home/data/'
 
-    def __init__(self, manifest_file, dest_path = './'):
+    def __init__(self, source, dest_path = './', dry_run=False):
         self.data_home = os.path.expandvars(self.data_home)
         self.data_dest = dest_path
-        self.rsync = 'rsync -vrlptzP --update --mkpath'.split()
+        self.rsync = 'rsync -vrlptzP --update --mkpath --exclude z.*'.split()
+        if dry_run:
+            self.rsync += ['--dry-run']
 
-        # load the manifest
-        self.data_src = str(PurePath(manifest_file).parent)+'/'
-        manifest_name = str(PurePath(manifest_file).name)
-        print('--- base path:', self.data_src)
-        cmd = self.rsync + [self.data_home+manifest_file, self.data_dest]
-        print('--- loading manifest:', cmd)
-        subprocess.run(cmd)
+        if 'yml' in source or 'yaml' in source:
+            # this is a manifest file -- load it
+            self.data_src = str(PurePath(source).parent)+'/'
+            manifest_name = str(PurePath(source).name)
+            print('--- base path:', self.data_src)
+            cmd = self.rsync + [self.data_home+source, self.data_dest]
+            print('--- loading manifest:', cmd)
+            subprocess.run(cmd)
 
-        with open(manifest_name, 'r', encoding='utf-8') as fil:
-            self.manifest = yaml.safe_load(fil)
+            with open(manifest_name, 'r', encoding='utf-8') as fil:
+                self.manifest = yaml.safe_load(fil)
+        else:
+            # this is just a path
+            self.data_src = source
 
         # print('--- manifest:\n', self.manifest)
 
-    def pull_all(self):
-        cmd = self.rsync + [self.data_home+self.data_src, self.data_dest] #'--dry-run', 
+    def pull(self):
+        cmd = self.rsync + [self.data_home+self.data_src, self.data_dest]
         print('--- loading full folder:', cmd)
         subprocess.run(cmd)
 
-    def push_all(self):
-        cmd = self.rsync + [self.data_dest, self.data_home+self.data_src, '--dry-run']
+    def push(self):
+        cmd = self.rsync + [self.data_dest, self.data_home+self.data_src]
         print('--- pushing full folder:', cmd)
-        # subprocess.run(cmd)
+        subprocess.run(cmd)
 
     def install(self, start=0, stop=-1):
         datasets = self.manifest['datasets']

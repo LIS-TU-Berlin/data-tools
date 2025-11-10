@@ -25,6 +25,15 @@ class H5Reader:
             if obj.dtype=='int8':
                 str = ''.join([chr(x) for x in obj[()]])
                 print('       ', str)
+            elif obj.dtype=='object':
+                total_size=0
+                print('       ', end='')
+                for i in range(obj.size):
+                    o = obj[i]
+                    if obj.size<20:
+                        print(o.shape, end='')
+                    total_size += o.size*o.dtype.itemsize
+                print(obj[0].dtype, f'{total_size/1024:.2f}kB')
             elif obj.size<20:
                 print('       ', obj[()])
         else:
