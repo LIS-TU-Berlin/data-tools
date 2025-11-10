@@ -24,10 +24,15 @@ class DataInstaller:
 
         # print('--- manifest:\n', self.manifest)
 
-    def install_all(self):
+    def pull_all(self):
         cmd = self.rsync + [self.data_home+self.data_src, self.data_dest] #'--dry-run', 
         print('--- loading full folder:', cmd)
         subprocess.run(cmd)
+
+    def push_all(self):
+        cmd = self.rsync + [self.data_dest, self.data_home+self.data_src, '--dry-run']
+        print('--- pushing full folder:', cmd)
+        # subprocess.run(cmd)
 
     def install(self, start=0, stop=-1):
         datasets = self.manifest['datasets']

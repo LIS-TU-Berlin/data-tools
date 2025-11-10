@@ -5,15 +5,21 @@ import sim_wrappers
 import numpy as np
 import robotic as ry
 
-def rai2mujoco(useFranka=False):
+def rai2mujoco(which):
     C = ry.Config()
-    if useFranka:
+    if which=='franka':
         C.addFile('$HOME/git/rai-robotModels/panda/panda.g')
         C.getFrame('panda_finger_joint1').setJoint(ry.JT.none)
         C.getFrame('panda_finger_joint2').setJoint(ry.JT.none)
+    elif which=='twoFingers':
+        # C.addFile('../sim-wrappers/sample/twoFingers.yml')
+        C.addFile('../../25-ExploreThroughSim/twoFingersBall.yml')
+        C.getFrame('obj').unLink()
+    elif which=='oneFinger':
+        C.addFile('../../25-ExploreThroughSim/oneFingerBall.yml')
+        C.getFrame('obj').unLink()
     else:
-        C.addFile('../sim-wrappers/sample/twoFingers.yml')
-        # C.getFrame('obj').setJoint(ry.JT.none)
+        raise Exception()
 
     M = data_tools.MujocoWriter(C)
     M.dump()
@@ -33,5 +39,6 @@ def rai2mujoco(useFranka=False):
         sim.ctrl.overwriteSmooth(q.reshape(1,-1), [.2], sim.ctrl_time)
 
 if __name__ == "__main__":
-    # rai2mujoco(True)
-    rai2mujoco(False)
+    # rai2mujoco('franka')
+    # rai2mujoco('twoFingers')
+    rai2mujoco('oneFinger')

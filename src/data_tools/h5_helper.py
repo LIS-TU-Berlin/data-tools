@@ -16,6 +16,7 @@ class H5Writer:
 
 class H5Reader:
     def __init__(self, filename):
+        self.filename = filename
         self.fil = h5py.File(filename, 'r')
 
     def print_attrs(self, name, obj):
@@ -33,7 +34,11 @@ class H5Reader:
         self.fil.visititems(self.print_attrs)
 
     def read(self, name):
-        return self.fil[name][()]
+        try:
+            X = self.fil[name][()]
+        except:
+            raise Exception(f'cannot access field "{name}" in {self.filename} file')
+        return X
 
     def read_dict(self, name):
         obj = self.fil[name]
