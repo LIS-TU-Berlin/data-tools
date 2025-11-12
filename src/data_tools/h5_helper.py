@@ -19,7 +19,7 @@ class H5Reader:
         self.filename = filename
         self.fil = h5py.File(filename, 'r')
 
-    def print_attrs(self, name, obj):
+    def print_objs(self, name, obj):
         if isinstance(obj, h5py.Dataset):
             print('   ', obj.name, obj.shape, obj.dtype, f'{obj.size*obj.dtype.itemsize/1024:.2f}kB')
             if obj.dtype=='int8':
@@ -40,7 +40,7 @@ class H5Reader:
             print('---', obj.name)
 
     def print_info(self):
-        self.fil.visititems(self.print_attrs)
+        self.fil.visititems(self.print_objs)
 
     def read(self, name):
         try:
@@ -55,6 +55,24 @@ class H5Reader:
         str = ''.join([chr(x) for x in obj[()]])
         d = ast.literal_eval(str)
         return d
+    
+    def read_objs(self, name, obj):
+        if isinstance(obj, h5py.Dataset):
+            if obj.dtype=='int8':
+                if chr(obj[()][0]) == '{':
+                    self.ALL[name] = self.read_dict(name)
+                else:
+                    str = ''.join([chr(x) for x in obj[()]])
+                    self.ALL[name] = str
+            else:
+                self.ALL[name] = self.read(name)
+        else:
+            print('---', obj.name)
+
+    def read_all(self):
+        self.ALL = {}
+        self.fil.visititems(self.read_objs)
+        return self.ALL
 
 if __name__ == "__main__":
     filename = sys.argv[1]
