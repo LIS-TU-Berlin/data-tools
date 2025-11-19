@@ -9,7 +9,7 @@ class DataInstaller:
     def __init__(self, source, dest_path = './', dry_run=False):
         self.data_home = os.path.expandvars(self.data_home)
         self.data_dest = dest_path
-        self.rsync = 'rsync -vrlptzP --update --mkpath --exclude z.*'.split()
+        self.rsync = 'rsync -vrlptzP --update --mkpath --exclude=z.*'.split()
         if dry_run:
             self.rsync += ['--dry-run']
 
@@ -36,7 +36,7 @@ class DataInstaller:
         subprocess.run(cmd)
 
     def push(self):
-        cmd = self.rsync + [self.data_dest, self.data_home+self.data_src]
+        cmd = self.rsync + ['--exclude=tmp'] + [self.data_dest, self.data_home+self.data_src]
         print('--- pushing full folder:', cmd)
         subprocess.run(cmd)
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import h5py
-import json
-import ast
+import yaml
 
 class H5Writer:
     def __init__(self, filename):
@@ -12,7 +11,8 @@ class H5Writer:
         self.fil.create_dataset(name, data=data, dtype=dtype)
 
     def write_dict(self, name, data):
-        self.write(name, bytearray(json.dumps(data), 'utf-8'), dtype='int8')
+        # self.write(name, bytearray(json.dumps(data), 'utf-8'), dtype='int8')
+        self.write(name, bytearray(yaml.dump(data, default_flow_style=True, sort_keys=False, width=120), 'utf-8'), dtype='int8')
 
 class H5Reader:
     def __init__(self, filename):
@@ -53,7 +53,9 @@ class H5Reader:
         obj = self.fil[name]
         assert obj.dtype=='int8'
         str = ''.join([chr(x) for x in obj[()]])
-        d = ast.literal_eval(str)
+        # print('parsing dict:', str)
+        d = yaml.safe_load(str)
+        # d = ast.literal_eval(str)
         return d
     
     def read_objs(self, name, obj):
