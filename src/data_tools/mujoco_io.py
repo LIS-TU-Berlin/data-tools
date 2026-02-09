@@ -265,7 +265,8 @@ class MujocoWriter:
         "sphere": ("sphere"),
     }
 
-    def __init__(self, C: ry.Config):
+    def __init__(self, C: ry.Config, verbose=0):
+        self.verbose = verbose
         self.root = ET.Element("mujoco", {"model": "ry_convert"})
 
         self.asset = ET.SubElement(self.root, "asset")
@@ -288,10 +289,21 @@ class MujocoWriter:
         # C.setJointState(np.zeros(len(q0)))
         # add all frames without parent, or with a free joint:
         for f in C.getFrames():
-            spec = f.asDict()
-            isFree = "joint" in spec and spec["joint"] == "free"
-            if f.getParent() == None or isFree:
+            # spec = f.asDict()
+            # isFree = "joint" in spec and spec["joint"] == "free"
+            isFree = (f.getJointType() == ry.JT.free)
+            parent = f.getParent()
+            if parent == None or isFree:
+                if parent is not None:
+                    assert np.linalg.norm(parent.getPose() - np.array([0,0,0,1,0,0,0])) < 1e-10, 'parent of free objects need to be an origin frame!'
                 self.addFrame(f, self.worldbody)
+
+        f = C.getFrame('camera_init')
+        if f is not None:
+            spec = f.asDict()
+            pose = spec["pose"]
+            c = ET.SubElement(self.worldbody, 'camera', { 'name': 'cam0', 'pos': self.as_str(pose[:3]), 'quat': self.as_str(pose[3:]) })
+
         C.setJointState(q0)
 
     def as_str(self, input_floats):
@@ -302,7 +314,8 @@ class MujocoWriter:
 
     def addFrame(self, f: ry.Frame, parent: ET.Element):
         spec = f.asDict()
-        print(f.name, spec)
+        if self.verbose>0:
+            print(f.name, spec)
 
         d = {"name": f.name}
         if "pose" in spec and "joint" not in spec:
@@ -413,4 +426,6 @@ class MujocoWriter:
         tree.write("z.xml")
 
     def str(self):
+        tree = ET.ElementTree(self.root)
+        ET.indent(tree, space="  ", level=0)
         return ET.tostring(self.root)

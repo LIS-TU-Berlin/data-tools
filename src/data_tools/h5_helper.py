@@ -2,6 +2,7 @@
 
 import h5py
 import yaml
+import numpy as np
 
 class H5Writer:
     def __init__(self, filename):
@@ -10,9 +11,16 @@ class H5Writer:
     def write(self, name, data, dtype = 'float64'):
         self.fil.create_dataset(name, data=data, dtype=dtype)
 
+    def write_list(self, name, data, dtype = 'float64'):
+        dt = h5py.vlen_dtype(np.dtype(dtype))
+        dset = self.fil.create_dataset(name, (len(data),), dtype=dt)
+        for i,x in enumerate(data):
+            dset[i] = x.reshape(-1)
+
     def write_dict(self, name, data):
         # self.write(name, bytearray(json.dumps(data), 'utf-8'), dtype='int8')
         self.write(name, bytearray(yaml.dump(data, default_flow_style=True, sort_keys=False, width=120), 'utf-8'), dtype='int8')
+
 
 class H5Reader:
     def __init__(self, filename):
@@ -33,7 +41,7 @@ class H5Reader:
                     if obj.size<20:
                         print(o.shape, end='')
                     total_size += o.size*o.dtype.itemsize
-                print(obj[0].dtype, f'{total_size/1024:.2f}kB')
+                print(f'list of {obj[0].dtype} arrays {total_size/1024:.2f}kB')
             elif obj.size<20:
                 print('       ', obj[()])
         else:
