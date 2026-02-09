@@ -7,7 +7,9 @@ authors = [
     { name = "Marc Toussaint", email = "toussaint@tu-berlin.de" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pillow", "numpy", "h5py", "pyyaml", "lxml",
+]
 
 [project.scripts]
 data-tools = "data_tools:main"
