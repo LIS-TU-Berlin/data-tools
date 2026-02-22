@@ -348,14 +348,14 @@ class MujocoWriter:
                     mj_args["axis"] = type[1]
                 for k, v in spec.items():
                     if "mj_joint_" in k:
-                        mj_args[k.replace("mj_joint_", "")] = v
+                        mj_args[k.replace("mj_joint_", "")] = str(v)
                 j = ET.SubElement(a, "joint", mj_args)
 
                 # create a motor
                 mj_args = {"name": f.name, "joint": f.name, "class": "ryjoint"}
                 for k, v in spec.items():
                     if "mj_actuator_" in k:
-                        mj_args[k.replace("mj_actuator_", "")] = v
+                        mj_args[k.replace("mj_actuator_", "")] = str(v)
                 m = ET.SubElement(self.actuator, "position", mj_args)
 
         # has a geometry
