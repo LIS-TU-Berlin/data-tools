@@ -265,9 +265,11 @@ class MujocoWriter:
         "sphere": ("sphere"),
     }
 
-    def __init__(self, C: ry.Config, verbose=0):
+    def __init__(self, C: ry.Config, verbose=0, friction="0.8 0.1 0.1"):
         self.verbose = verbose
         self.root = ET.Element("mujoco", {"model": "ry_convert"})
+
+        ET.SubElement(self.root, "compiler", {"autolimits": "false"})
 
         self.asset = ET.SubElement(self.root, "asset")
 
@@ -278,9 +280,9 @@ class MujocoWriter:
 
         self.default = ET.SubElement(self.root, "default")
         a = ET.SubElement(self.default, "default", {"class": "ryjoint"})
-        b = ET.SubElement(a, "position", {"forcerange": "-150 150", "kp": "1000", "kv": "10", "ctrlrange": "-10 10"})
+        b = ET.SubElement(a, "position", {}) #{"forcerange": "-150 150", "kp": "1000", "kv": "10", "ctrlrange": "-10 10"})
         a = ET.SubElement(self.default, "default", {"class": "geom_fric"})
-        b = ET.SubElement(a, "geom", {"friction": ".8 0.1 0.1"})
+        b = ET.SubElement(a, "geom", {"friction": friction})
 
         self.actuator = ET.SubElement(self.root, "actuator")
         self.worldbody = ET.SubElement(self.root, "worldbody")
