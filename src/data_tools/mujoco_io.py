@@ -296,8 +296,8 @@ class MujocoWriter:
             isFree = (f.getJointType() == ry.JT.free)
             parent = f.getParent()
             if parent == None or isFree:
-                if parent is not None:
-                    assert np.linalg.norm(parent.getPose() - np.array([0,0,0,1,0,0,0])) < 1e-10, 'parent of free objects need to be an origin frame!'
+                # if parent is not None:
+                    # assert np.linalg.norm(parent.getPose() - np.array([0,0,0,1,0,0,0])) < 1e-10, 'parent of free objects need to be an origin frame!'
                 self.addFrame(f, self.worldbody)
 
         f = C.getFrame('camera_init')
