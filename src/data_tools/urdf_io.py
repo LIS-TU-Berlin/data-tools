@@ -140,8 +140,12 @@ class URDFLoader():
                     axis = elem.attrib['xyz']
                     if axis=='1 0 0':
                         f_joint.setJoint(ry.JT.hingeX, limits, 1., f_mimic)
+                    elif axis=='-1 0 0':
+                        f_joint.setJoint(ry.JT.hingeX, limits, -1., f_mimic)
                     elif axis=='0 1 0':
                         f_joint.setJoint(ry.JT.hingeY, limits, 1., f_mimic)
+                    elif axis=='0 -1 0':
+                        f_joint.setJoint(ry.JT.hingeY, limits, -1., f_mimic)
                     elif axis=='0 0 1':
                         f_joint.setJoint(ry.JT.hingeZ, limits, 1., f_mimic)
                     elif axis=='0 0 -1':
@@ -171,6 +175,8 @@ class URDFLoader():
                     axis = elem.attrib['xyz']
                     if axis=='1 0 0':
                         f_joint.setJoint(ry.JT.transX, limits, 1., f_mimic)
+                    elif axis=='-1 0 0':
+                        f_joint.setJoint(ry.JT.transX, limits, -1., f_mimic)
                     elif axis=='0 1 0':
                         f_joint.setJoint(ry.JT.transY, limits, 1., f_mimic)
                     elif axis=='0 -1 0':

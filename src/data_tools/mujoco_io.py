@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import robotic as ry
@@ -29,12 +28,12 @@ class MujocoLoader():
 
         tree = ET.parse(file)
         path, _ = os.path.split(file)
-        root = tree.getroot()
+        self.root = tree.getroot()
 
         self.materials = {}    
         self.textures = {}
         self.meshes = {}
-        self.load_assets(root, path)
+        self.load_assets(path)
         self.bodyCount = -1
 
         self.C = ry.Config()
@@ -42,19 +41,19 @@ class MujocoLoader():
         self.base.setAttributes({'multibody':True})
         self.base.setPosition(basePos)
         self.base.setQuaternion(baseQuat)
-        self.add_node(root, self.base, path, 0)
+        self.add_node(self.root, self.base, path, 0)
 
     def as_floats(self, input_string):
         return [float(num) for num in input_string.replace(',', ' ').split()]
     
-    def load_assets(self, root, path):
-        texs = root.findall('.//texture')
+    def load_assets(self, path):
+        texs = self.root.findall('.//texture')
         for tex in texs:
             name = tex.attrib.get('name', '')
             file = tex.attrib.get('file', '')
             self.textures[name] = os.path.join(path, file)
 
-        maters = root.findall('.//material')
+        maters = self.root.findall('.//material')
         for mater in maters:
             name = mater.attrib.get('name', '')
             color = mater.attrib.get('rgba', '')
@@ -66,12 +65,14 @@ class MujocoLoader():
             else:
                 self.materials[name] = ''
 
-        for mesh in root.findall('.//mesh'):
+        for mesh in self.root.findall('.//mesh'):
             name = mesh.attrib.get('name', '')
             file = mesh.attrib.get('file', '')
             if file.startswith('visual') or file.startswith('collision'): #HACK: the true path is hidden in some compiler attribute
                 file = 'meshes/'+file
             mesh.attrib['file'] = file
+            if name=='':
+                name = file[:-4]
             self.meshes[name] = mesh.attrib
     
     def add_node(self, node, f_parent, path, level):
@@ -112,6 +113,8 @@ class MujocoLoader():
         self.setRelativePose(f_body, body.attrib)
 
         for i, joint in enumerate(body.findall('./joint')):
+            self.add_default_attribs(joint, 'joint')
+
             axis = joint.attrib.get('axis', None)
             limits = joint.attrib.get('range', None)
             joint_name = joint.attrib.get('name', f'{body_name}_joint{i*"_"}')
@@ -121,17 +124,21 @@ class MujocoLoader():
             f_origin.unLink()
             f_origin.setParent(f_parent, True)
 
-            if axis:
-                if axis in self.muj2rai_joint_map:
-                    axis = self.muj2rai_joint_map[axis]
-                else:
-                    vec1 = np.array([0., 0., 1.])
-                    vec2 = np.array(self.as_floats(axis))
-                    quat = ry.Quaternion().setDiff(vec1, vec2).asArr()
-                    f_origin.setRelativeQuaternion(quat)
-                    axis = ry.JT.hingeZ
-            else:
-                axis = ry.JT.hingeZ
+            # if axis:
+            #     if axis in self.muj2rai_joint_map:
+            #         axis = self.muj2rai_joint_map[axis]
+            #     else:
+            #         vec1 = np.array([0., 0., 1.])
+            #         vec2 = np.array(self.as_floats(axis))
+            #         quat = ry.Quaternion().setDiff(vec1, vec2).asArr()
+            #         f_origin.setRelativeQuaternion(quat)
+            #         axis = ry.JT.hingeZ
+            # else:
+            #     axis = ry.JT.hingeZ
+            if not axis:
+                axis = '0 1 0'
+                # raise Exception(f'need axis for joint {joint_name}')
+
 
             if joint.attrib.get('type', 'hinge')=='slide':
                 trans_map = {
@@ -147,7 +154,7 @@ class MujocoLoader():
             #     joint_name = f'{joint_name}_{self.bodyCount}'
             f_joint = self.C.addFrame(joint_name)
             f_joint.setParent(f_origin)
-            f_joint.setJoint(axis, self.as_floats(limits))
+            f_joint.setJoint(ry.JT.hinge, self.as_floats(limits), self.as_floats(axis))
             
             # relink body:
             f_parent = f_joint
@@ -155,6 +162,8 @@ class MujocoLoader():
             f_body.setParent(f_parent, True)
 
         for i, geom in enumerate(body.findall('./geom')):
+            self.add_default_attribs(geom, 'geom')
+
             isColl = geom.attrib.get('contype', self.defaultConType)!='0' or 'coll' in geom.attrib.get('class','') or '_col' in geom.attrib.get('class','')
             if self.visualsOnly and isColl:
                 continue
@@ -232,6 +241,16 @@ class MujocoLoader():
                 
         return f_body
 
+    def add_default_attribs(self, node, default_key):
+        cl = node.attrib.get('class', None)
+        if cl is not None:
+            defs = self.root.findall('.//default')
+            for d in defs:
+                if d.attrib.get('class', '')==cl:
+                    spec = d.find(default_key)
+                    for k,v in spec.items():
+                        node.attrib[k]=v
+
     def setRelativePose(self, f, attrib):
         pos = attrib.get('pos', None)
         if pos:
@@ -270,6 +289,7 @@ class MujocoWriter:
         self.root = ET.Element("mujoco", {"model": "ry_convert"})
 
         ET.SubElement(self.root, "compiler", {"autolimits": "false"})
+        ET.SubElement(self.root, "size", {"memory": "200M"})
 
         self.asset = ET.SubElement(self.root, "asset")
 
@@ -342,7 +362,11 @@ class MujocoWriter:
             if spec["joint"] == "free":
                 j = ET.SubElement(a, "freejoint", {})
             else:
-                type = self.joint_map[spec["joint"]]
+                type = spec["joint"]
+                if type=='hinge':
+                    type = ('hinge', self.as_str(spec["axis"]))
+                else:
+                    type = self.joint_map[spec["joint"]]
 
                 # create a joint
                 mj_args = {"name": f.name, "damping": "0.1", "type": type[0]}
@@ -404,12 +428,16 @@ class MujocoWriter:
 
         # has inertia
         if "mass" in spec:
-            if geom is not None:
-                geom.set("mass", str(spec["mass"]))
+            # if geom is not None:
+            #     geom.set("mass", str(spec["mass"]))
+            # else:
+            if 'com' in spec:
+                pos = self.as_str(spec['com'])
             else:
-                i = ET.SubElement(
-                    a, "inertial", {"pos": "0 0 0", "mass": str(spec["mass"]), "diaginertia": "1e-5 1e-5 1e-5"}
-                )
+                pos = '0 0 0'
+            i = ET.SubElement(
+                a, "inertial", {"pos": pos, "mass": str(spec["mass"]), "diaginertia": "1e-5 1e-5 1e-5"}
+            )
         # friction
         if geom is not None:
             geom.set("class", "geom_fric")

@@ -1,6 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def get_tensor(f, resolution=30):
+    X = [None,None,None]
+    for i in range(3):
+        X[i] = np.linspace(-.5*self.size[i], .5*self.size[i], resolution)
+    X = np.stack(np.meshgrid(*X, indexing='ij'), axis=-1) .reshape(-1, 3)
+    fX = np.array([f(x) for x in X])
+    return fX.reshape(resolution,resolution,resolution)
+
 class PlotHelper:
     # plotting options:
     x_log = False

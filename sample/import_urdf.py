@@ -61,8 +61,8 @@ def convert(file, pruneRigidJoints=False, recomputeInertias=False, processMeshes
             if M.tmesh is None:
                 continue
 
-            # M.repair_meshlab(merge_threshold=1e-4)
-            M.repair_trimesh(mergeTolerance=1e-3)
+            M.repair_meshlab(merge_threshold=1e-4)
+            # M.repair_trimesh(mergeTolerance=1e-3)
             print('  watertight:', M.tmesh.is_watertight)
             print('  oriented:', M.tmesh.is_winding_consistent)
             M.report()
@@ -72,7 +72,8 @@ def main():
     args = parser.parse_args()
 
     if args.file=='none':
-        args.file = '/home/mtoussai/git/rai-robotModels/z1/z1.urdf'
+        # args.file = '/home/mtoussai/git/rai-robotModels/z1/z1.urdf'
+        args.file = '/home/mtoussai/git/rai-robotModels/allegro/allegro.urdf'
         # args.file = '/home/mtoussai/git/rai-robotModels/panda/panda_arm_hand.urdf'
         # args.file = '/home/mtoussai/git/rai-robotModels/g1/g1_description/g1_29dof.urdf'
         # args.file = '/home/mtoussai/git/rai-robotModels/ranger/ranger_mini.urdf'
