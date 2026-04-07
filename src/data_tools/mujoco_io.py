@@ -300,7 +300,7 @@ class MujocoWriter:
 
         self.default = ET.SubElement(self.root, "default")
         a = ET.SubElement(self.default, "default", {"class": "ryjoint"})
-        b = ET.SubElement(a, "position", {}) #{"forcerange": "-150 150", "kp": "1000", "kv": "10", "ctrlrange": "-10 10"})
+        b = ET.SubElement(a, "position", {"kp": "1000", "kv": "10", }) #{"forcerange": "-150 150", "kp": "1000", "kv": "10", "ctrlrange": "-10 10"})
         a = ET.SubElement(self.default, "default", {"class": "geom_fric"})
         b = ET.SubElement(a, "geom", {"friction": friction})
 
@@ -428,16 +428,16 @@ class MujocoWriter:
 
         # has inertia
         if "mass" in spec:
-            # if geom is not None:
-            #     geom.set("mass", str(spec["mass"]))
-            # else:
-            if 'com' in spec:
-                pos = self.as_str(spec['com'])
+            if geom is not None:
+                geom.set("mass", str(spec["mass"]))
             else:
+            # if 'com' in spec:
+            #     pos = self.as_str(spec['com'])
+            # else:
                 pos = '0 0 0'
-            i = ET.SubElement(
-                a, "inertial", {"pos": pos, "mass": str(spec["mass"]), "diaginertia": "1e-5 1e-5 1e-5"}
-            )
+                i = ET.SubElement(
+                    a, "inertial", {"pos": pos, "mass": str(spec["mass"]), "diaginertia": "1e-5 1e-5 1e-5"}
+                )
         # friction
         if geom is not None:
             geom.set("class", "geom_fric")
