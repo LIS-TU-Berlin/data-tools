@@ -21,7 +21,13 @@ class PlotHelper:
     quant = [(0.25, .1)] #(quantile, color_alpha)
 
     def __init__(self):
-        pass
+        plt.rc('font', size=12)          # controls default text sizes
+        plt.rc('axes', titlesize=16)     # fontsize of the axes title
+        plt.rc('axes', labelsize=14)    # fontsize of the x and y labels
+        # plt.rc('xtick', labelsize=8)    # fontsize of the tick labels
+        # plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
+        # plt.rc('legend', fontsize=10)    # legend fontsize
+        # plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
     def begin(self, title, xlabel, ylabel):
         # plt.clf()
@@ -59,7 +65,7 @@ class PlotHelper:
         if self.grid:
             plt.grid()
         if self.legend is not None:
-            self.ax.legend(loc=self.legend, fontsize=7)
+            self.ax.legend(loc=self.legend, fancybox=True, framealpha=0.5)
         self.fig.savefig(filename, format='pdf', bbox_inches='tight')
         if show:
             plt.show()
